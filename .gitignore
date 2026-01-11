@@ -1,0 +1,27 @@
+# Configuration file with sensitive keys - DO NOT COMMIT
+config.py
+
+# State file (may contain tracking data)
+state.json
+
+# Log files
+*.log
+bot.log
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
