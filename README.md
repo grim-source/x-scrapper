@@ -1,6 +1,6 @@
 # X to Nostr Bot
 
-A free, self-hosted Python bot that monitors an X (Twitter) account using Nitter and reposts new posts to Nostr. Designed to run on a Raspberry Pi 5 using cron.
+A free, self-hosted Python bot that monitors one or more X (Twitter) accounts using Nitter and reposts new posts to Nostr. Designed to run on a Raspberry Pi 5 using cron.
 
 ## Features
 
@@ -82,10 +82,15 @@ If you're starting with a fresh Raspberry Pi 5:
 
 2. **Update the following settings:**
 
-   - **X_USERNAME**: The X (Twitter) username to monitor (without the @ symbol)
+   - **X_ACCOUNTS**: List of X (Twitter) usernames to monitor (without the @ symbol)
      ```python
-     X_USERNAME = "elonmusk"  # Example
+     X_ACCOUNTS = [
+         "elonmusk",  # Example
+         "jack",      # Add more accounts by adding lines
+         # "nasa",    # Uncomment to add more accounts
+     ]
      ```
+     **Note:** You can monitor multiple X accounts. All posts will be published to the same Nostr account.
 
    - **NITTER_BASE_URL**: The Nitter instance to use
      ```python
@@ -121,9 +126,10 @@ python3 bot.py
 ```
 
 **Expected output:**
-- If it's the first run, it will scrape the latest post and publish it to Nostr
-- On subsequent runs, it will only publish if a new post is found
-- Check your Nostr client to verify the post was published
+- The bot will process each account in your X_ACCOUNTS list
+- If it's the first run for an account, it will scrape the latest post and publish it to Nostr
+- On subsequent runs, it will only publish if a new post is found for each account
+- Check your Nostr client to verify the posts were published
 
 **Common issues:**
 - **"Error: nostr-sdk not installed"**: Run `pip3 install --user nostr-sdk`
@@ -165,24 +171,31 @@ python3 bot.py
    crontab -l
    ```
 
-## How to Change the Monitored X Account
+## How to Add or Remove X Accounts
 
 1. **Edit `config.py`**:
    ```bash
    nano config.py
    ```
 
-2. **Change the `X_USERNAME` variable**:
+2. **Update the `X_ACCOUNTS` list**:
    ```python
-   X_USERNAME = "new_username"  # Change this to the X username you want to monitor
+   X_ACCOUNTS = [
+       "elonmusk",      # Keep existing accounts
+       "jack",          # Add new accounts by adding lines
+       "new_account",   # Or remove accounts by deleting lines
+   ]
    ```
 
 3. **Save and exit**
 
-4. **Optional: Reset state** (if you want to repost the latest post from the new account):
-   ```bash
-   echo '{"last_post_id": null, "last_updated": null}' > state.json
-   ```
+4. **Optional: Reset state for a specific account** (if you want to repost the latest post from that account):
+   - Edit `state.json` manually to remove the entry for that account, or
+   - Delete the entire `state.json` file to reset all accounts:
+     ```bash
+     rm state.json
+     ```
+     (The bot will recreate it on the next run)
 
 ## How to Rotate Nitter Mirrors
 
@@ -307,7 +320,7 @@ grep CRON /var/log/syslog | tail -20
 x-scrapper/
 ├── bot.py              # Main bot script
 ├── config.py           # Configuration file (edit this!)
-├── state.json          # State file (stores last seen post ID)
+├── state.json          # State file (stores last seen post ID for each account)
 ├── requirements.txt    # Python dependencies
 ├── README.md          # This file
 └── bot.log            # Log file (created by cron)
@@ -315,7 +328,7 @@ x-scrapper/
 
 ## Running Multiple Bot Instances
 
-If you want to monitor multiple X accounts and post to different Nostr accounts, you can run multiple instances of the bot. Each instance needs its own directory with its own `config.py` and `state.json`.
+**Note:** The bot now supports monitoring multiple X accounts in a single instance (all posting to the same Nostr account). However, if you want to monitor multiple X accounts and post to **different Nostr accounts**, you can run multiple instances of the bot. Each instance needs its own directory with its own `config.py` and `state.json`.
 
 ### Setting Up Multiple Instances
 
@@ -334,12 +347,12 @@ If you want to monitor multiple X accounts and post to different Nostr accounts,
    # Configure first instance
    cd ~/x-scrapper
    nano config.py
-   # Set X_USERNAME and NOSTR_PRIVATE_KEY for first account
+   # Set X_ACCOUNTS and NOSTR_PRIVATE_KEY for first Nostr account
    
    # Configure second instance
    cd ~/x-scrapper-account2
    nano config.py
-   # Set X_USERNAME and NOSTR_PRIVATE_KEY for second account
+   # Set X_ACCOUNTS and NOSTR_PRIVATE_KEY for second Nostr account
    ```
 
 3. **Set up separate cron entries** for each instance:
